@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/donald-stolz/H2S-Student-Mangement-server#readme",
   "devDependencies": {
+    "dotenv": "^7.0.0",
     "nodemon": "^1.18.10"
   },
   "dependencies": {

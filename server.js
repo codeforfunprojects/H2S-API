@@ -2,12 +2,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const firebase = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json");
+const ServiceAccount = require("./ServiceAccount");
 const app = express();
 const port = process.env.PORT || 3000;
 
 firebase.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: firebase.credential.cert(ServiceAccount),
   databaseURL: "https://h2s-student-management.firebaseio.com"
 });
 
@@ -32,5 +32,5 @@ app.patch("/checkin/:login", (req, res) => {
 });
 
 app.listen(port, () => {
-  consol.log("Server running on port: " + port);
+  console.log("Server running on port: " + port);
 });
