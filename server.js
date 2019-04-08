@@ -20,17 +20,20 @@ const db = firebase.database();
  *	-> Should
  *
  * 1. GET Students
- * 	-> Should get all HackHighSchool students' short details from our DB
+ * 	-> Should get all HackHighSchool students' short details from our DB & intra
  *
- * 2. GET Student:id
+ * 2. GET Student/:id
  * 	-> Should get student details from our DB and from Intra;
  * 	-> Will update projects & check to update user information
  *
- * 3. POST StudentReport:id (Takes JSON)
+ * 3. POST StudentReport/:id (Takes JSON)
  * 	-> Send student reports
  *
- * 4. DELETE Student:id
- * 5. PATCH Student:id
+ * 4. PATCH StudentCheckIn/:id (Takes Bool)
+ *  -> Sets student checkIn status
+ *
+ * 5. DELETE Student:id
+ * 6. PATCH Student:id
  * 	-> Allows updates to student info; ?? Should we update in Intra
  */
 
