@@ -13,29 +13,23 @@ firebase.initializeApp({
 
 const db = firebase.database();
 
-// TODO: Add routes
-/*
- * 0. POST Add new students (Takes CSV)
- *	-> Should iterate through CSV, check if student exists and create students
- *	-> Should
- *
- * 1. GET Students
- * 	-> Should get all HackHighSchool students' short details from our DB & intra
- *
- * 2. GET Student/:id
- * 	-> Should get student details from our DB and from Intra;
- * 	-> Will update projects & check to update user information
- *
- * 3. POST StudentReport/:id (Takes JSON)
- * 	-> Send student reports
- *
- * 4. PATCH StudentCheckIn/:id (Takes Bool)
- *  -> Sets student checkIn status
- *
- * 5. DELETE Student:id
- * 6. PATCH Student:id
- * 	-> Allows updates to student info; ?? Should we update in Intra
- */
+// TODO: Need a one time setup to sync our DB with intra login/image_url data
+
+app.get("/students", (req, res) => {
+  // TODO: Get all HackHighSchool students' short details from our DB
+});
+
+app.get("/students/:login", (req, res) => {
+  // TODO: Get full profile from our DB & Intra API
+});
+
+app.post("/evaluations/:login", (req, res) => {
+  // TODO: Post a new evaluation to user by login
+});
+
+app.patch("/checkin/:login", (req, res) => {
+  // TODO: Update the checkin status by login
+});
 
 app.listen(port, () => {
   consol.log("Server running on port: " + port);
