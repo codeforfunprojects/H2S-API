@@ -19,8 +19,16 @@ app.get("/students", (req, res) => {
   // TODO: Get all HackHighSchool students' short details from our DB
 });
 
+app.get("/groups", (req, res) => {
+  // TODO: Get list of groups w/ mentor -> Should come from our DB
+});
+
 app.get("/students/:login", (req, res) => {
   // TODO: Get full profile from our DB & Intra API
+});
+
+app.get("/groups/:id", (req, res) => {
+  // TODO: Get info on Groups -> Current Mentor, students, projects
 });
 
 app.post("/evaluations/:login", (req, res) => {
