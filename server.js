@@ -5,6 +5,12 @@ const cors = require("cors");
 const firebase = require("firebase-admin");
 const ServiceAccount = require("./ServiceAccount");
 const intraRequest = require("./Intra");
+const Bottleneck = require("bottleneck/es5");
+const limiter = new Bottleneck({
+  maxConcurrent: 1,
+  minTime: 500
+});
+const intraLimited = limiter.wrap(intraRequest);
 const app = express();
 const port = process.env.PORT || 3000;
 const projid = [
@@ -34,14 +40,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 
-//
-//
-/* Begin Routes */
-//
-
 // TODO: Need a one time setup to sync our DB with intra login/image_url data
 const syncIntraFirebase = async () => {
-  let intraDetails = [];
   let studentsH2S = await intraRequest(
     "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page",
     (err, response, body) => {
@@ -54,49 +54,37 @@ const syncIntraFirebase = async () => {
       }
     }
   );
-  studentsH2S = JSON.parse(studentsH2S);
-  //   let { login } = studentsH2S[0].user;
-  //   let details = await intraRequest(
-  //     `https://api.intra.42.fr/v2/users/${login}`,
-  //     (err, res) => {
-  //       if (err) {
-  //         console.error(err);
-  //       }
-  //     }
-  //   );
-  //   console.log(JSON.parse(details));
-  //   console.log();
-
-  //   let { displayname, image_url } = details;
-  //   let student = { login, displayname, image_url };
-  //   console.log(student);
 
   studentsH2S.forEach(async item => {
-    setTimeout(
-      async item => {
-        const { login } = item.user;
-        // console.log(item);
-
-        let details = await intraRequest(
-          `https://api.intra.42.fr/v2/users/${login}`,
-          (err, res) => {
-            if (err) {
-              console.error(err);
-            }
+    try {
+      const { login } = item.user;
+      let details = await intraLimited(
+        `https://api.intra.42.fr/v2/users/${login}`,
+        (err, res) => {
+          if (err) {
+            console.error(err);
+          } else if (res.statusCode === 429) {
+            console.log("Rate limit excedded");
           }
-        );
-        details = JSON.parse(details);
-        let { displayname, image_url } = details;
-        let student = { login, displayname, image_url };
-        db.ref("students").push(student);
-      },
-      2000,
-      item
-    );
+        }
+      );
+
+      let { displayname, image_url } = details;
+      let student = { login, displayname, image_url };
+      console.log(student);
+
+      db.ref("students").push(student);
+    } catch (error) {
+      console.error(error);
+    }
   });
 };
 
-syncIntraFirebase();
+/****************/
+/* 				*/
+/* Begin Routes */
+/*				*/
+/****************/
 
 app.get("/students", async (req, res) => {
   /* const schema = {
@@ -117,6 +105,8 @@ app.get("/students", async (req, res) => {
       }
     }
   );
+  console.log(details);
+
   intraStudents = details.map(item => {
     return item.user.login;
   });
