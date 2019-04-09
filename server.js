@@ -34,7 +34,8 @@ firebase.initializeApp({
 });
 
 const db = firebase.database();
-
+const studentsRef = db.ref("students");
+const mentorsRef = db.ref("mentors");
 // Add CORS & bodyParser middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -75,7 +76,7 @@ const syncIntraFirebase = async () => {
         let { displayname, image_url } = details;
         let student = { login, displayname, image_url };
         console.log(index, student);
-        db.ref("students").push(student);
+        studentsRef.push(student);
       } catch (error) {
         console.error(error);
       }
@@ -83,8 +84,8 @@ const syncIntraFirebase = async () => {
     i++;
   }
 };
+// syncIntraFirebase();
 
-syncIntraFirebase();
 /****************/
 /* 				*/
 /* Begin Routes */
@@ -93,31 +94,16 @@ syncIntraFirebase();
 
 app.get("/students", async (req, res) => {
   /* const schema = {
-    login: Joi.string().min(2).required(),
-    project: Joi.projid.string().required(),
-    photo:,
-    level:
+    login,
+    displayname,
+    image_url
   };
    */
-  //get only proj, level, photo, login
-  // TODO: Get all HackHighSch students' short details from our DB
-  let intraStudents = [];
-  let details = await intraRequest(
-    "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page",
-    (err, response, body) => {
-      if (err) {
-        console.error(err);
-      }
-    }
-  );
-  console.log(details);
-
-  intraStudents = details.map(item => {
-    return item.user.login;
+  // Get all HackHighSchool students' quick details from our DB
+  studentsRef.orderByChild("name").once("value", studentSnapshot => {
+    let students = Object.values(studentSnapshot.val());
+    res.status(200).send(students);
   });
-  //   RN returns array of logins
-  res.send(intraStudents);
-  //   TODO: Serch firebase by login
 });
 
 app.get("/groups", (req, res) => {
@@ -126,9 +112,29 @@ app.get("/groups", (req, res) => {
   res.send(projid);
 });
 
-app.get("/students/:login", (req, res) => {
+app.get("/students/:login", async (req, res) => {
+  let student = {};
+  const { login } = req.params;
+
   //pull all objs from api
   // TODO: Get full profile from our DB & Intra API
+  await studentsRef.orderByChild("name").once("value", studentSnapshot => {
+    let students = Object.values(studentSnapshot.val());
+
+    student = students.find(item => {
+      return item.login === login;
+    });
+  });
+  let intraDetails = await intraRequest(
+    `https://api.intra.42.fr/v2/users/${student.login}`,
+    (err, response, body) => {
+      if (err) {
+        console.error(err);
+      }
+    }
+  );
+  student = { ...student, ...intraDetails };
+  res.send(student);
 });
 
 app.get("/groups/:id", (req, res) => {
