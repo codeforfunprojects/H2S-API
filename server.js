@@ -1,67 +1,93 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-//const Joi = require("joi");
 const firebase = require("firebase-admin");
 const ServiceAccount = require("./ServiceAccount");
+const intraRequest = require("./Intra");
 const app = express();
 const port = process.env.PORT || 3000;
-const projid = [
-  {id:1132, name:'OOP'},
-  {id:1175, name:'WEBDEV'},
-  {id:1200, name:'APCSP'},
-  {id:1172, name:'GAME2'},
-  {id:1107, name:'ALGPUZ'},
-  {id:1109, name:'HACKADV'},
-  {id:1141, name:'PYTHON'},
-  {id:1295, name:'NODE'},
-  {id:1291, name:'PYGAME'},
-  {id:1167, name:'GAME1'},
-  {id:1283, name:'MCHLRN'},
-  {id:1196, name:'POLCALC'},
-  {id:1191, name:'DATAMIN'},
-];
+
+const studentList = require("./students.json");
+
+// Intialize firebase and save DB refs
 firebase.initializeApp({
   credential: firebase.credential.cert(ServiceAccount),
   databaseURL: "https://h2s-student-management.firebaseio.com"
 });
-
 const db = firebase.database();
+const studentsRef = db.ref("students");
+const groupsRef = db.ref("groups");
 
-// TODO: Need a one time setup to sync our DB with intra login/image_url data
+// Add CORS & bodyParser middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 
+/****************/
+/* 				*/
+/* Begin Routes */
+/*				*/
+/****************/
 
-app.get("/students", (req, res) => {
+// Get all HackHighSchool students' quick details from our DB
+app.get("/students", async (req, res) => {
   /* const schema = {
-    login: Joi.string().min(2).required(),
-    project: Joi.projid.string().required(),
-    photo:,
-    level:
+    login,
+    displayname,
+    image_url
   };
    */
-  //get only proj, level, photo, login
-  // TODO: Get all HackHighSch students' short details from our DB
-  res.send("https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page");
-  /*how to pull only specific object from user looking into,*/
+  studentsRef.orderByChild("name").once("value", studentSnapshot => {
+    let students = Object.values(studentSnapshot.val());
+    res.status(200).send(students);
+  });
 });
 
+// Get full profile from our DB & Intra API
+app.get("/students/:login", async (req, res) => {
+  let student = {};
+  const { login } = req.params;
+
+  await studentsRef.orderByChild("name").once("value", studentSnapshot => {
+    let students = Object.values(studentSnapshot.val());
+
+    student = students.find(item => {
+      return item.login === login;
+    });
+  });
+  let intraDetails = await intraRequest(
+    `https://api.intra.42.fr/v2/users/${student.login}`,
+    (err, response, body) => {
+      if (err) {
+        console.error(err);
+      }
+    }
+  );
+  student = { ...student, ...intraDetails };
+  res.send(student);
+});
+
+// Get list of groups w/ mentor
 app.get("/groups", (req, res) => {
-  //list of all parent projects
-  // TODO: Get list of groups w/ mentor -> Should come from our DB
-  res.send(projid);
+  groupsRef.orderByChild("name").once("value", groupSnapshot => {
+    let groups = Object.values(groupSnapshot.val());
+    res.status(200).send(groups);
+  });
 });
 
-app.get("/students/:login", (req, res) => {
-  //pull all objs from api
-  // TODO: Get full profile from our DB & Intra API
-  res.send("https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page");
-});
-
+// Get info for a group -> Current Mentor, students, projects
 app.get("/groups/:id", (req, res) => {
-  //mentor is a bit hard to catch, maybe manually add
-  // TODO: Get info on Groups -> Current Mentor, students, projects
-  const proj = projid.find(c => c.id === parseInt((req.params.id)));
-  /*add check if ! a proj we have info on */
+  const { id } = req.params;
+  console.log(id, typeof id);
+
+  groupsRef.orderByChild("name").once("value", groupSnapshot => {
+    let groups = Object.values(groupSnapshot.val());
+    let group = groups.find(item => {
+      return item.id == id;
+    });
+    res.status(200).send(group);
+  });
 });
 
 app.post("/evaluations/:login", (req, res) => {
@@ -69,11 +95,30 @@ app.post("/evaluations/:login", (req, res) => {
   // TODO: Post a new evaluation to user by login
 });
 
-app.patch("/checkin/:login", (req, res) => {
+app.patch("/checkin/:login", async (req, res) => {
   //search for a specific user in the H2S database, by login, pass login as param
-  // TODO: Update the checkin status by login
+  // Update the checkin status by login
+  const { login } = req.params;
+  const { checkin_status } = req.body;
+
+  await studentsRef.orderByChild("name").once("value", studentSnapshot => {
+    let students = Object.values(studentSnapshot.val());
+
+    student = students.find(item => {
+      return item.login === login;
+    });
+    if (
+      typeof student.checkin_status === "undefined" ||
+      student.checkin_status !== checkin_status
+    ) {
+      student.checkin_status = checkin_status;
+    }
+    res.status(200).send(student);
+  });
 });
 
 app.listen(port, () => {
   console.log("Server running on port: " + port);
 });
+
+// Get all students -> "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page"

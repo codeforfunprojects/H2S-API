@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const ServiceAccount = {
   type: "service_account",
   project_id: "h2s-student-management",
