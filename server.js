@@ -5,86 +5,24 @@ const cors = require("cors");
 const firebase = require("firebase-admin");
 const ServiceAccount = require("./ServiceAccount");
 const intraRequest = require("./Intra");
-const Bottleneck = require("bottleneck/es5");
-const limiter = new Bottleneck({
-  maxConcurrent: 1,
-  minTime: 500
-});
-const intraLimited = limiter.wrap(intraRequest);
 const app = express();
 const port = process.env.PORT || 3000;
-const projid = [
-  { id: 1132, name: "OOP" },
-  { id: 1175, name: "WEBDEV" },
-  { id: 1200, name: "APCSP" },
-  { id: 1172, name: "GAME2" },
-  { id: 1107, name: "ALGPUZ" },
-  { id: 1109, name: "HACKADV" },
-  { id: 1141, name: "PYTHON" },
-  { id: 1295, name: "NODE" },
-  { id: 1291, name: "PYGAME" },
-  { id: 1167, name: "GAME1" },
-  { id: 1283, name: "MCHLRN" },
-  { id: 1196, name: "POLCALC" },
-  { id: 1191, name: "DATAMIN" }
-];
+
+const studentList = require("./students.json");
+
+// Intialize firebase and save DB refs
 firebase.initializeApp({
   credential: firebase.credential.cert(ServiceAccount),
   databaseURL: "https://h2s-student-management.firebaseio.com"
 });
-
 const db = firebase.database();
 const studentsRef = db.ref("students");
-const mentorsRef = db.ref("mentors");
+const groupsRef = db.ref("groups");
+
 // Add CORS & bodyParser middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.unsubscribe(bodyParser.urlencoded({ extended: false }));
-
-// TODO: Need a one time setup to sync our DB with intra login/image_url data
-const syncIntraFirebase = async () => {
-  let i = 1;
-
-  while (i < 14) {
-    let studentsH2S = await intraRequest(
-      `https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page=${i}`,
-      (err, response, body) => {
-        if (!err) {
-          let studentsH2S = JSON.parse(body);
-          // NOTE: Is this all H2S students
-          return studentsH2S;
-        } else {
-          console.error(err);
-        }
-      }
-    );
-
-    studentsH2S.forEach(async (item, index) => {
-      try {
-        const { login } = item.user;
-        let details = await intraLimited(
-          `https://api.intra.42.fr/v2/users/${login}`,
-          (err, res) => {
-            if (err) {
-              console.error(err);
-            } else if (res.statusCode === 429) {
-              console.log("Rate limit excedded");
-            }
-          }
-        );
-
-        let { displayname, image_url } = details;
-        let student = { login, displayname, image_url };
-        console.log(index, student);
-        studentsRef.push(student);
-      } catch (error) {
-        console.error(error);
-      }
-    });
-    i++;
-  }
-};
-// syncIntraFirebase();
 
 /****************/
 /* 				*/
@@ -92,6 +30,7 @@ const syncIntraFirebase = async () => {
 /*				*/
 /****************/
 
+// Get all HackHighSchool students' quick details from our DB
 app.get("/students", async (req, res) => {
   /* const schema = {
     login,
@@ -99,25 +38,17 @@ app.get("/students", async (req, res) => {
     image_url
   };
    */
-  // Get all HackHighSchool students' quick details from our DB
   studentsRef.orderByChild("name").once("value", studentSnapshot => {
     let students = Object.values(studentSnapshot.val());
     res.status(200).send(students);
   });
 });
 
-app.get("/groups", (req, res) => {
-  //list of all parent projects
-  // TODO: Get list of groups w/ mentor -> Should come from our DB
-  res.send(projid);
-});
-
+// Get full profile from our DB & Intra API
 app.get("/students/:login", async (req, res) => {
   let student = {};
   const { login } = req.params;
 
-  //pull all objs from api
-  // TODO: Get full profile from our DB & Intra API
   await studentsRef.orderByChild("name").once("value", studentSnapshot => {
     let students = Object.values(studentSnapshot.val());
 
@@ -137,11 +68,26 @@ app.get("/students/:login", async (req, res) => {
   res.send(student);
 });
 
+// Get list of groups w/ mentor
+app.get("/groups", (req, res) => {
+  groupsRef.orderByChild("name").once("value", groupSnapshot => {
+    let groups = Object.values(groupSnapshot.val());
+    res.status(200).send(groups);
+  });
+});
+
+// Get info for a group -> Current Mentor, students, projects
 app.get("/groups/:id", (req, res) => {
-  //mentor is a bit hard to catch, maybe manually add
-  // TODO: Get info on Groups -> Current Mentor, students, projects
-  const proj = projid.find(c => c.id === parseInt(req.params.id));
-  /*add check if ! a proj we have info on */
+  const { id } = req.params;
+  console.log(id, typeof id);
+
+  groupsRef.orderByChild("name").once("value", groupSnapshot => {
+    let groups = Object.values(groupSnapshot.val());
+    let group = groups.find(item => {
+      return item.id == id;
+    });
+    res.status(200).send(group);
+  });
 });
 
 app.post("/evaluations/:login", (req, res) => {
@@ -149,9 +95,26 @@ app.post("/evaluations/:login", (req, res) => {
   // TODO: Post a new evaluation to user by login
 });
 
-app.patch("/checkin/:login", (req, res) => {
+app.patch("/checkin/:login", async (req, res) => {
   //search for a specific user in the H2S database, by login, pass login as param
-  // TODO: Update the checkin status by login
+  // Update the checkin status by login
+  const { login } = req.params;
+  const { checkin_status } = req.body;
+
+  await studentsRef.orderByChild("name").once("value", studentSnapshot => {
+    let students = Object.values(studentSnapshot.val());
+
+    student = students.find(item => {
+      return item.login === login;
+    });
+    if (
+      typeof student.checkin_status === "undefined" ||
+      student.checkin_status !== checkin_status
+    ) {
+      student.checkin_status = checkin_status;
+    }
+    res.status(200).send(student);
+  });
 });
 
 app.listen(port, () => {
