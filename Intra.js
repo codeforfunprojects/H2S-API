@@ -17,7 +17,7 @@ const refreshToken = async () => {
       return json.access_token;
     } else {
       console.log("res undefined");
-      console.log(err);
+      //   console.log(err);
     }
   });
   return JSON.parse(response);
@@ -28,7 +28,7 @@ const intraRequest = async (intraURL, callback) => {
     token = await refreshToken();
   }
 
-  request(
+  return await request(
     {
       url: intraURL,
       auth: {

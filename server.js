@@ -40,8 +40,65 @@ app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 //
 
 // TODO: Need a one time setup to sync our DB with intra login/image_url data
+const syncIntraFirebase = async () => {
+  let intraDetails = [];
+  let studentsH2S = await intraRequest(
+    "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page",
+    (err, response, body) => {
+      if (!err) {
+        let studentsH2S = JSON.parse(body);
+        // NOTE: Is this all H2S students
+        return studentsH2S;
+      } else {
+        console.error(err);
+      }
+    }
+  );
+  studentsH2S = JSON.parse(studentsH2S);
+  //   let { login } = studentsH2S[0].user;
+  //   let details = await intraRequest(
+  //     `https://api.intra.42.fr/v2/users/${login}`,
+  //     (err, res) => {
+  //       if (err) {
+  //         console.error(err);
+  //       }
+  //     }
+  //   );
+  //   console.log(JSON.parse(details));
+  //   console.log();
 
-app.get("/students", (req, res) => {
+  //   let { displayname, image_url } = details;
+  //   let student = { login, displayname, image_url };
+  //   console.log(student);
+
+  studentsH2S.forEach(async item => {
+    setTimeout(
+      async item => {
+        const { login } = item.user;
+        // console.log(item);
+
+        let details = await intraRequest(
+          `https://api.intra.42.fr/v2/users/${login}`,
+          (err, res) => {
+            if (err) {
+              console.error(err);
+            }
+          }
+        );
+        details = JSON.parse(details);
+        let { displayname, image_url } = details;
+        let student = { login, displayname, image_url };
+        db.ref("students").push(student);
+      },
+      2000,
+      item
+    );
+  });
+};
+
+syncIntraFirebase();
+
+app.get("/students", async (req, res) => {
   /* const schema = {
     login: Joi.string().min(2).required(),
     project: Joi.projid.string().required(),
@@ -51,6 +108,21 @@ app.get("/students", (req, res) => {
    */
   //get only proj, level, photo, login
   // TODO: Get all HackHighSch students' short details from our DB
+  let intraStudents = [];
+  let details = await intraRequest(
+    "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page",
+    (err, response, body) => {
+      if (err) {
+        console.error(err);
+      }
+    }
+  );
+  intraStudents = details.map(item => {
+    return item.user.login;
+  });
+  //   RN returns array of logins
+  res.send(intraStudents);
+  //   TODO: Serch firebase by login
 });
 
 app.get("/groups", (req, res) => {
