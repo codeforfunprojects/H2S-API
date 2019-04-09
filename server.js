@@ -1,25 +1,26 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-//const Joi = require("joi");
 const firebase = require("firebase-admin");
 const ServiceAccount = require("./ServiceAccount");
+const intraRequest = require("./Intra");
 const app = express();
 const port = process.env.PORT || 3000;
 const projid = [
-  {id:1132, name:'OOP'},
-  {id:1175, name:'WEBDEV'},
-  {id:1200, name:'APCSP'},
-  {id:1172, name:'GAME2'},
-  {id:1107, name:'ALGPUZ'},
-  {id:1109, name:'HACKADV'},
-  {id:1141, name:'PYTHON'},
-  {id:1295, name:'NODE'},
-  {id:1291, name:'PYGAME'},
-  {id:1167, name:'GAME1'},
-  {id:1283, name:'MCHLRN'},
-  {id:1196, name:'POLCALC'},
-  {id:1191, name:'DATAMIN'},
+  { id: 1132, name: "OOP" },
+  { id: 1175, name: "WEBDEV" },
+  { id: 1200, name: "APCSP" },
+  { id: 1172, name: "GAME2" },
+  { id: 1107, name: "ALGPUZ" },
+  { id: 1109, name: "HACKADV" },
+  { id: 1141, name: "PYTHON" },
+  { id: 1295, name: "NODE" },
+  { id: 1291, name: "PYGAME" },
+  { id: 1167, name: "GAME1" },
+  { id: 1283, name: "MCHLRN" },
+  { id: 1196, name: "POLCALC" },
+  { id: 1191, name: "DATAMIN" }
 ];
 firebase.initializeApp({
   credential: firebase.credential.cert(ServiceAccount),
@@ -28,8 +29,17 @@ firebase.initializeApp({
 
 const db = firebase.database();
 
-// TODO: Need a one time setup to sync our DB with intra login/image_url data
+// Add CORS & bodyParser middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 
+//
+//
+/* Begin Routes */
+//
+
+// TODO: Need a one time setup to sync our DB with intra login/image_url data
 
 app.get("/students", (req, res) => {
   /* const schema = {
@@ -41,8 +51,6 @@ app.get("/students", (req, res) => {
    */
   //get only proj, level, photo, login
   // TODO: Get all HackHighSch students' short details from our DB
-  res.send("https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page");
-  /*how to pull only specific object from user looking into,*/
 });
 
 app.get("/groups", (req, res) => {
@@ -54,13 +62,12 @@ app.get("/groups", (req, res) => {
 app.get("/students/:login", (req, res) => {
   //pull all objs from api
   // TODO: Get full profile from our DB & Intra API
-  res.send("https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page");
 });
 
 app.get("/groups/:id", (req, res) => {
   //mentor is a bit hard to catch, maybe manually add
   // TODO: Get info on Groups -> Current Mentor, students, projects
-  const proj = projid.find(c => c.id === parseInt((req.params.id)));
+  const proj = projid.find(c => c.id === parseInt(req.params.id));
   /*add check if ! a proj we have info on */
 });
 
@@ -77,3 +84,5 @@ app.patch("/checkin/:login", (req, res) => {
 app.listen(port, () => {
   console.log("Server running on port: " + port);
 });
+
+// Get all students -> "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page"
