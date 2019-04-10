@@ -140,15 +140,23 @@ app.get("/groups/:code", async (req, res) => {
 
 app.patch("/groups/:code", async (req, res) => {
   const { code } = req.params;
-  const { mentor, image_url } = req.body;
+  const { mentor, image_url, students } = req.body;
   let group = {};
 
   await groupsRef.child(code).once("value", groupSnapshot => {
     group = groupSnapshot.val();
   });
+  if (typeof group.students === "undefined") {
+    group.students = [];
+  }
+  if (typeof group.image_url === "undefined") {
+    group.image_url = "";
+  }
+
   let update = {
     mentor: mentor ? mentor : group.mentor,
-    image_url: image_url ? image_url : group.image_url
+    image_url: image_url ? image_url : group.image_url,
+    students: students ? students : group.students
   };
   await groupsRef.child(code).update(update);
   group = { ...group, ...update };
