@@ -95,9 +95,9 @@ app.post("/evaluations/:login", (req, res) => {
   // TODO: Post a new evaluation to user by login
 });
 
+// Update the checkin status by login
 app.patch("/checkin/:login", async (req, res) => {
-  //search for a specific user in the H2S database, by login, pass login as param
-  // Update the checkin status by login
+  // TODO: Keep track of attendance dates
   const { login } = req.params;
   const { checkin_status } = req.body;
 
@@ -117,6 +117,10 @@ app.patch("/checkin/:login", async (req, res) => {
   });
 });
 
+// TODO: Update Groups
+// TODO: Update students
+
+// BONUS TODO: End session route to set all students' checkin_status to false
 app.listen(port, () => {
   console.log("Server running on port: " + port);
 });
