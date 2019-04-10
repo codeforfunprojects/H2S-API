@@ -5,6 +5,7 @@ const cors = require("cors");
 const firebase = require("firebase-admin");
 const ServiceAccount = require("./ServiceAccount");
 const intraRequest = require("./Intra");
+const moment = require("moment");
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -30,15 +31,12 @@ app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 /*				*/
 /****************/
 
+/*
+ * Student Routes
+ */
 // Get all HackHighSchool students' quick details from our DB
 app.get("/students", async (req, res) => {
-  /* const schema = {
-    login,
-    displayname,
-    image_url
-  };
-   */
-  studentsRef.orderByChild("name").once("value", studentSnapshot => {
+  studentsRef.once("value", studentSnapshot => {
     let students = Object.values(studentSnapshot.val());
     res.status(200).send(students);
   });
@@ -49,12 +47,8 @@ app.get("/students/:login", async (req, res) => {
   let student = {};
   const { login } = req.params;
 
-  await studentsRef.orderByChild("name").once("value", studentSnapshot => {
-    let students = Object.values(studentSnapshot.val());
-
-    student = students.find(item => {
-      return item.login === login;
-    });
+  await studentsRef.child(login).once("value", studentSnapshot => {
+    student = studentSnapshot.val();
   });
   let intraDetails = await intraRequest(
     `https://api.intra.42.fr/v2/users/${student.login}`,
@@ -68,57 +62,98 @@ app.get("/students/:login", async (req, res) => {
   res.send(student);
 });
 
+// Update student
+app.patch("/students/:login", async (req, res) => {
+  const { login } = req.params;
+  const { displayname, group } = req.body;
+  let student = {};
+
+  await studentsRef.child(login).once("value", studentSnapshot => {
+    student = studentSnapshot.val();
+  });
+  let update = {
+    displayname: displayname ? displayname : student.displayname,
+    group: group ? group : student.group
+  };
+  student = await studentsRef.child(login).update(update);
+  res.status(200).send(student);
+});
+
+// Update the checkin status by login
+app.patch("/checkin/:login", async (req, res) => {
+  const { login } = req.params;
+  const { checkin_status } = req.body;
+  let student = {};
+
+  await studentsRef.child(login).once("value", studentSnapshot => {
+    student = studentSnapshot.val();
+  });
+
+  let attendance_history = student.attendance_history
+    ? student.attendance_history
+    : [];
+  try {
+    if (student.checkin_status === false && checkin_status === true) {
+      let today = moment().format("MM DD YYYY");
+      if (!attendance_history.includes(today)) {
+        attendance_history.push(today);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  await studentsRef
+    .child(login)
+    .update({ checkin_status, attendance_history: attendance_history });
+  res.status(200).send(`Checkin status update to ${checkin_status}`);
+});
+
+// Post a new evaluation to user by login
+app.post("/evaluations/:login", async (req, res) => {
+  const { login } = req.params;
+  const { evaluation } = req.body;
+
+  await studentsRef.child(`${login}/evaluations`).push(evaluation);
+  res.status(200).send("Eval added");
+});
+
+/*
+ * Group/Mentor Routes
+ */
+
 // Get list of groups w/ mentor
 app.get("/groups", (req, res) => {
-  groupsRef.orderByChild("name").once("value", groupSnapshot => {
+  groupsRef.once("value", groupSnapshot => {
     let groups = Object.values(groupSnapshot.val());
     res.status(200).send(groups);
   });
 });
 
 // Get info for a group -> Current Mentor, students, projects
-app.get("/groups/:id", (req, res) => {
-  const { id } = req.params;
-  console.log(id, typeof id);
+app.get("/groups/:code", async (req, res) => {
+  const { code } = req.params;
 
-  groupsRef.orderByChild("name").once("value", groupSnapshot => {
-    let groups = Object.values(groupSnapshot.val());
-    let group = groups.find(item => {
-      return item.id == id;
-    });
-    res.status(200).send(group);
+  groupsRef.child(code).once("value", groupSnapshot => {
+    res.status(200).send(groupSnapshot.val());
   });
 });
 
-app.post("/evaluations/:login", (req, res) => {
-  //what is this asking for? to create an eval slot from the site? or sign up to one?
-  // TODO: Post a new evaluation to user by login
-});
+app.patch("/groups/:code", async (req, res) => {
+  const { code } = req.params;
+  const { mentor, image_url } = req.body;
+  let group = {};
 
-// Update the checkin status by login
-app.patch("/checkin/:login", async (req, res) => {
-  // TODO: Keep track of attendance dates
-  const { login } = req.params;
-  const { checkin_status } = req.body;
-
-  await studentsRef.orderByChild("name").once("value", studentSnapshot => {
-    let students = Object.values(studentSnapshot.val());
-
-    student = students.find(item => {
-      return item.login === login;
-    });
-    if (
-      typeof student.checkin_status === "undefined" ||
-      student.checkin_status !== checkin_status
-    ) {
-      student.checkin_status = checkin_status;
-    }
-    res.status(200).send(student);
+  await groupsRef.child(code).once("value", groupSnapshot => {
+    group = groupSnapshot.val();
   });
+  let update = {
+    mentor: mentor ? mentor : group.mentor,
+    image_url: image_url ? image_url : group.image_url
+  };
+  await groupsRef.child(code).update(update);
+  group = { ...group, ...update };
+  res.status(200).send(group);
 });
-
-// TODO: Update Groups
-// TODO: Update students
 
 // BONUS TODO: End session route to set all students' checkin_status to false
 app.listen(port, () => {
