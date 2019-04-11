@@ -93,7 +93,11 @@ app.patch("/checkin/:login", async (req, res) => {
     ? student.attendance_history
     : [];
   try {
-    if (student.checkin_status === false && checkin_status === true) {
+    if (
+      (typeof student.checkin_status === "undefined" ||
+        student.checkin_status === false) &&
+      checkin_status === true
+    ) {
       let today = moment().format("MM DD YYYY");
       if (!attendance_history.includes(today)) {
         attendance_history.push(today);
@@ -132,10 +136,18 @@ app.get("/groups", (req, res) => {
 // Get info for a group -> Current Mentor, students, projects
 app.get("/groups/:code", async (req, res) => {
   const { code } = req.params;
-
-  groupsRef.child(code).once("value", groupSnapshot => {
-    res.status(200).send(groupSnapshot.val());
+  let group = {};
+  await groupsRef.child(code).once("value", groupSnapshot => {
+    group = groupSnapshot.val();
   });
+  let intraDetails = await intraRequest(
+    `https://api.intra.42.fr/v2/projects/${group.id}`,
+    err => {
+      console.error(err);
+    }
+  );
+  group = { ...group, ...intraDetails };
+  res.status(200).send(group);
 });
 
 app.patch("/groups/:code", async (req, res) => {
