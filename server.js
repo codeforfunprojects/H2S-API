@@ -95,6 +95,13 @@ app.patch("/groups/students/:login", async (req, res) => {
     }
     student.group = group;
     await groupsRef.child(`${group.code}/students`).push(login);
+    await groupsRef
+      .child(`${group.code}/students`)
+      .once("value", groupSnapshot => {
+        let groupDetails = groupSnapshot.val();
+        const { code, name, image_url } = groupDetails;
+        student.group = { code, name, image_url };
+      });
     await studentsRef.child(login).set(student);
     res.status(200).send(student);
   } catch (error) {
