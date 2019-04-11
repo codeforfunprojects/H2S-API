@@ -85,23 +85,30 @@ app.patch("/students/:login", async (req, res) => {
 app.patch("/groups/students/:login", async (req, res) => {
   try {
     const { login } = req.params;
-    const { group } = req.body;
+    const { code } = req.body;
     let student = {};
     await studentsRef.child(login).once("value", studentSnapshot => {
       student = studentSnapshot.val();
     });
     if (typeof student.group !== "undefined") {
-      await groupsRef.child(`${group.code}/students`).remove(login);
+      console.log(student.group.code);
+
+      await groupsRef
+        .child(`${student.group.code}/students`)
+        .once("value", loginSnapshot => {
+          let groupLogins = loginSnapshot.val();
+          let userKey = Object.keys(groupLogins).find(
+            key => groupLogins[key] === login
+          );
+          db.ref(`groups/${student.group.code}/students/${userKey}`).remove();
+        });
     }
-    student.group = group;
-    await groupsRef.child(`${group.code}/students`).push(login);
-    await groupsRef
-      .child(`${group.code}/students`)
-      .once("value", groupSnapshot => {
-        let groupDetails = groupSnapshot.val();
-        const { code, name, image_url } = groupDetails;
-        student.group = { code, name, image_url };
-      });
+    await groupsRef.child(`${code}/students`).push(login);
+    await groupsRef.child(`${code}`).once("value", groupSnapshot => {
+      let groupDetails = groupSnapshot.val();
+      const { code, name, image_url } = groupDetails;
+      student.group = { code, name, image_url };
+    });
     await studentsRef.child(login).set(student);
     res.status(200).send(student);
   } catch (error) {
