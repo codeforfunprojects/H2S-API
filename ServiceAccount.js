@@ -2,7 +2,7 @@ const ServiceAccount = {
   type: "service_account",
   project_id: "h2s-student-management",
   private_key_id: process.env.PRIVATE_KEY_ID,
-  private_key: process.env.PRIVATE_KEY,
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
   client_email:
     "firebase-adminsdk-z6yzo@h2s-student-management.iam.gserviceaccount.com",
   client_id: "105934609355405479744",
