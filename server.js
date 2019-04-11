@@ -112,7 +112,6 @@ app.patch("/checkin/:login", async (req, res) => {
   await studentsRef.child(login).once("value", studentSnapshot => {
     student = studentSnapshot.val();
   });
-
   let attendance_history = student.attendance_history
     ? student.attendance_history
     : [];
@@ -122,7 +121,7 @@ app.patch("/checkin/:login", async (req, res) => {
         student.checkin_status === false) &&
       checkin_status === true
     ) {
-      let today = moment().format("MM DD YYYY");
+      let today = moment().format("MM-DD-YYYY");
       if (!attendance_history.includes(today)) {
         attendance_history.push(today);
       }
@@ -140,9 +139,33 @@ app.patch("/checkin/:login", async (req, res) => {
 app.post("/evaluations/:login", async (req, res) => {
   const { login } = req.params;
   const { evaluation } = req.body;
+  let today = moment().format("MM-DD-YYYY");
 
-  await studentsRef.child(`${login}/evaluations`).push(evaluation);
+  if (typeof evaluation.goal !== "string") {
+    return res.status(400).send("Evaluations must start with goals");
+  }
+  await studentsRef
+    .child(`${login}/evaluations`)
+    .child(today)
+    .set(evaluation);
   res.status(200).send("Eval added");
+});
+
+// Update evaluation
+app.patch("/evaluations/:login", async (req, res) => {
+  const { login } = req.params;
+  const { evaluation } = req.body;
+  let today = moment().format("MM-DD-YYYY");
+
+  try {
+    await studentsRef
+      .child(`${login}/evaluations`)
+      .child(today)
+      .update(evaluation);
+    res.status(200).send("Evaluation updated");
+  } catch (err) {
+    res.status(400).send(err);
+  }
 });
 
 /*
