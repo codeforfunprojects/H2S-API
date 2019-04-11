@@ -11,8 +11,14 @@ const refreshToken = async () => {
     url: "https://api.intra.42.fr/oauth/token",
     method: "POST",
     form: {
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
+      client_id:
+        !process.env.NODE_ENV || process.env.NODE_ENV === "development"
+          ? process.env.CLIENT_ID
+          : JSON.parse(process.env.CLIENT_ID),
+      client_secret:
+        !process.env.NODE_ENV || process.env.NODE_ENV === "development"
+          ? process.env.CLIENT_SECRET
+          : JSON.parse(process.env.CLIENT_SECRET),
       grant_type: "client_credentials"
     }
   };
