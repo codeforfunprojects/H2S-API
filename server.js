@@ -81,6 +81,28 @@ app.patch("/students/:login", async (req, res) => {
   res.status(200).send(student);
 });
 
+// Add student to group
+app.patch("/groups/students/:login", async (req, res) => {
+  try {
+    const { login } = req.params;
+    const { group } = req.body;
+    let student = {};
+    await studentsRef.child(login).once("value", studentSnapshot => {
+      student = studentSnapshot.val();
+    });
+    if (typeof student.group !== "undefined") {
+      await groupsRef.child(`${group.code}/students`).remove(login);
+    }
+    student.group = group;
+    await groupsRef.child(`${group.code}/students`).push(login);
+    await studentsRef.child(login).set(student);
+    res.status(200).send(student);
+  } catch (error) {
+    console.error(error);
+    res.status(400);
+  }
+});
+
 // Update the checkin status by login
 app.patch("/checkin/:login", async (req, res) => {
   const { login } = req.params;
@@ -142,6 +164,15 @@ app.get("/groups/:code", async (req, res) => {
   await groupsRef.child(code).once("value", groupSnapshot => {
     group = groupSnapshot.val();
   });
+  if (group.students) {
+    let logins = Object.values(group.students);
+    await studentsRef.once("value", studentsSnapshot => {
+      let students = Object.values(studentsSnapshot.val());
+      group.students = students.filter(student => {
+        return logins.includes(student.login);
+      });
+    });
+  }
   let intraDetails = await intraRequest(
     `https://api.intra.42.fr/v2/projects/${group.id}`,
     err => {
