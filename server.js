@@ -1,4 +1,6 @@
-require("dotenv").config();
+if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+  require("dotenv").config();
+}
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
