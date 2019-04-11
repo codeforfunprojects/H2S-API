@@ -38,6 +38,9 @@ app.unsubscribe(bodyParser.urlencoded({ extended: false }));
  */
 // Get all HackHighSchool students' quick details from our DB
 app.get("/students", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   studentsRef.once("value", studentSnapshot => {
     let students = Object.values(studentSnapshot.val());
     res.status(200).send(students);
@@ -46,6 +49,9 @@ app.get("/students", async (req, res) => {
 
 // Get full profile from our DB & Intra API
 app.get("/students/:login", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   let student = {};
   const { login } = req.params;
 
@@ -66,6 +72,9 @@ app.get("/students/:login", async (req, res) => {
 
 // Update student
 app.patch("/students/:login", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   const { login } = req.params;
   const { displayname, group } = req.body;
   let student = {};
@@ -83,6 +92,9 @@ app.patch("/students/:login", async (req, res) => {
 
 // Add student to group
 app.patch("/groups/students/:login", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   try {
     const { login } = req.params;
     const { code } = req.body;
@@ -119,6 +131,9 @@ app.patch("/groups/students/:login", async (req, res) => {
 
 // Update the checkin status by login
 app.patch("/checkin/:login", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   const { login } = req.params;
   const { checkin_status } = req.body;
   let student = {};
@@ -151,6 +166,9 @@ app.patch("/checkin/:login", async (req, res) => {
 
 // Post a new evaluation to user by login
 app.post("/evaluations/:login", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   const { login } = req.params;
   const { evaluation } = req.body;
   let today = moment().format("MM-DD-YYYY");
@@ -167,6 +185,9 @@ app.post("/evaluations/:login", async (req, res) => {
 
 // Update evaluation
 app.patch("/evaluations/:login", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   const { login } = req.params;
   const { evaluation } = req.body;
   let today = moment().format("MM-DD-YYYY");
@@ -188,6 +209,9 @@ app.patch("/evaluations/:login", async (req, res) => {
 
 // Get list of groups w/ mentor
 app.get("/groups", (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   groupsRef.once("value", groupSnapshot => {
     let groups = Object.values(groupSnapshot.val());
     res.status(200).send(groups);
@@ -196,6 +220,9 @@ app.get("/groups", (req, res) => {
 
 // Get info for a group -> Current Mentor, students, projects
 app.get("/groups/:code", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   const { code } = req.params;
   let group = {};
   await groupsRef.child(code).once("value", groupSnapshot => {
@@ -221,6 +248,9 @@ app.get("/groups/:code", async (req, res) => {
 });
 
 app.patch("/groups/:code", async (req, res) => {
+  if (req.headers.authorization !== process.env.API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
   const { code } = req.params;
   const { mentor, image_url, students } = req.body;
   let group = {};
