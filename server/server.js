@@ -4,29 +4,14 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const firebase = require("firebase-admin");
-const ServiceAccount = require("./ServiceAccount");
-const intraRequest = require("./Intra");
 const moment = require("moment");
-const app = express();
-const port = process.env.PORT || 3000;
+const intraRequest = require("./utils/Intra");
 
-const studentList = require("./students.json");
-
-// Intialize firebase and save DB refs
-firebase.initializeApp({
-  credential: firebase.credential.cert(ServiceAccount),
-  databaseURL: "https://h2s-student-management.firebaseio.com"
-});
-const db = firebase.database();
+const db = require("./firebase");
 const studentsRef = db.ref("students");
 const groupsRef = db.ref("groups");
-const API_KEY =
-  !process.env.NODE_ENV ||
-  process.env.NODE_ENV === "development" ||
-  process.env.NODE_ENV === "test"
-    ? process.env.API_KEY
-    : JSON.parse(process.env.API_KEY);
+
+const app = express();
 // Add CORS & bodyParser middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -38,6 +23,13 @@ app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 /*				*/
 /****************/
 
+const port = process.env.PORT || 8080;
+const API_KEY =
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === "development" ||
+  process.env.NODE_ENV === "test"
+    ? process.env.API_KEY
+    : JSON.parse(process.env.API_KEY);
 /*
  * Student Routes
  */
@@ -280,6 +272,12 @@ app.patch("/groups/:code", async (req, res) => {
   res.status(200).send(group);
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log("Server running on port: " + port);
 });
+
+const closeServer = () => {
+  server.close();
+};
+
+module.exports = { app, closeServer };

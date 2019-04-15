@@ -4,9 +4,10 @@
   "description": "Build the Bay Hackathon server",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "watch": "nodemon server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/server.js",
+    "watch": "nodemon server/server.js",
+    "test": "jest --detectOpenHandles",
+    "test-watch": "nodemon --exec 'npm run test'"
   },
   "repository": {
     "type": "git",
@@ -20,7 +21,9 @@
   "homepage": "https://github.com/donald-stolz/H2S-Student-Mangement-server#readme",
   "devDependencies": {
     "dotenv": "^7.0.0",
-    "nodemon": "^1.18.10"
+    "jest": "^24.7.1",
+    "nodemon": "^1.18.10",
+    "supertest": "^4.0.2"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
