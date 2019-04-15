@@ -22,7 +22,9 @@ const db = firebase.database();
 const studentsRef = db.ref("students");
 const groupsRef = db.ref("groups");
 const API_KEY =
-  !process.env.NODE_ENV || process.env.NODE_ENV === "development"
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === "development" ||
+  process.env.NODE_ENV === "test"
     ? process.env.API_KEY
     : JSON.parse(process.env.API_KEY);
 // Add CORS & bodyParser middleware
@@ -278,9 +280,6 @@ app.patch("/groups/:code", async (req, res) => {
   res.status(200).send(group);
 });
 
-// BONUS TODO: End session route to set all students' checkin_status to false
 app.listen(port, () => {
   console.log("Server running on port: " + port);
 });
-
-// Get all students -> "https://api.intra.42.fr/v2/cursus/17/cursus_users?filter%5Bactive%5D=true&filter%5Bcampus_id%5D=7&page%5Bsize%5D=100&per_page"

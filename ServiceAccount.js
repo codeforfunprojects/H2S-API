@@ -3,7 +3,9 @@ const ServiceAccount = {
   project_id: "h2s-student-management",
   private_key_id: process.env.PRIVATE_KEY_ID,
   private_key:
-    !process.env.NODE_ENV || process.env.NODE_ENV === "development"
+    !process.env.NODE_ENV ||
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test"
       ? process.env.PRIVATE_KEY
       : JSON.parse(process.env.PRIVATE_KEY),
   client_email:
