@@ -1,10 +1,10 @@
 # H2S Student Management API
 
-TODO: Description
+This API connects the H2S Student Management App to both our own firebase database & 42's Intra API.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project.
 
 ### Prerequisites
 
@@ -23,7 +23,7 @@ _For live updates in development use_ `npm run start-watch`
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](.github/CONTRIBUTING.MD) for details on how to best get involved, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](https://github.com/donald-stolz/H2S-frontend/tree/master/.github/CONTRIBUTING.MD) for details on how to best get involved, and the process for submitting pull requests to us.
 
 ## Deployment
 
