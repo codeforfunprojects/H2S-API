@@ -23,7 +23,7 @@ _For live updates in development use_ `npm run start-watch`
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/donald-stolz/H2S-frontend/tree/master/.github/CONTRIBUTING.MD) for details on how to best get involved, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](https://github.com/donald-stolz/H2S-frontend/blob/master/.github/CONTRIBUTING.md) for details on how to best get involved, and the process for submitting pull requests to us.
 
 ## Deployment
 
