@@ -12,17 +12,17 @@ const studentsRef = db.ref("students");
 const groupsRef = db.ref("groups");
 const usersRef = db.ref("users");
 
+// Create app, then add CORS & bodyParser middleware
 const app = express();
-// Add CORS & bodyParser middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 
-/****************/
-/* 							*/
-/* Begin Routes */
-/*							*/
-/****************/
+/******************************************************************************/
+/* 																																						*/
+/* 														Begin API Setup 																*/
+/*																																						*/
+/******************************************************************************/
 
 const port = process.env.PORT || 8080;
 const API_KEY =
@@ -32,9 +32,11 @@ const API_KEY =
     ? process.env.API_KEY
     : JSON.parse(process.env.API_KEY);
 
-/*
- * User Routes
- */
+/******************************************************************************/
+/* 																																						*/
+/* 																User Routes 																*/
+/*																																						*/
+/******************************************************************************/
 
 // Set a user role
 app.post("/users", async (req, res) => {
@@ -71,9 +73,11 @@ app.get("/user/:email", async (req, res) => {
   }
 });
 
-/*
- * Student Routes
- */
+/******************************************************************************/
+/* 																																						*/
+/* 															Student Routes 																*/
+/*																																						*/
+/******************************************************************************/
 
 // Get all HackHighSchool students' quick details from our DB
 app.get("/students", async (req, res) => {
@@ -242,9 +246,11 @@ app.patch("/evaluations/:login", async (req, res) => {
   }
 });
 
-/*
- * Group/Mentor Routes
- */
+/******************************************************************************/
+/* 																																						*/
+/* 																Group Routes 																*/
+/*																																						*/
+/******************************************************************************/
 
 // Get list of groups w/ mentor
 app.get("/groups", (req, res) => {
@@ -286,6 +292,7 @@ app.get("/groups/:code", async (req, res) => {
   res.status(200).send(group);
 });
 
+// Update group by code
 app.patch("/groups/:code", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
     return res.status(401).send("Invalid API Key");
@@ -324,5 +331,5 @@ const closeServer = () => {
 
 module.exports = { app, closeServer };
 
-// FIXME: Need to check values on post and patch routes
+// FIXME: Need to check values on post/patch route parameters & body
 // FIXME: Need better error handling
