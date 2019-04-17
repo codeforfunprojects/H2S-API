@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
-    "watch": "nodemon server/server.js",
+    "start-watch": "nodemon server/server.js",
     "test": "jest",
     "test-watch": "nodemon --exec 'npm run test'"
   },

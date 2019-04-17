@@ -10,6 +10,7 @@ const intraRequest = require("./utils/Intra");
 const db = require("./firebase");
 const studentsRef = db.ref("students");
 const groupsRef = db.ref("groups");
+const usersRef = db.ref("users");
 
 const app = express();
 // Add CORS & bodyParser middleware
@@ -18,9 +19,9 @@ app.use(bodyParser.json());
 app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 
 /****************/
-/* 				*/
+/* 							*/
 /* Begin Routes */
-/*				*/
+/*							*/
 /****************/
 
 const port = process.env.PORT || 8080;
@@ -30,9 +31,50 @@ const API_KEY =
   process.env.NODE_ENV === "test"
     ? process.env.API_KEY
     : JSON.parse(process.env.API_KEY);
+
+/*
+ * User Routes
+ */
+
+// Set a user role
+app.post("/users", async (req, res) => {
+  if (req.headers.authorization !== API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
+  let { user } = req.body;
+  try {
+    await usersRef.push(user);
+    res.status(200).send("User role set");
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+// Return user's role
+app.get("/user/:email", async (req, res) => {
+  if (req.headers.authorization !== API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
+  const { email } = req.params;
+  let user;
+  try {
+    await usersRef.once("value", studentSnapshot => {
+      let users = Object.values(studentSnapshot.val());
+
+      user = users.find(item => {
+        return item.email === email;
+      });
+    });
+    res.status(200).send(user);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
 /*
  * Student Routes
  */
+
 // Get all HackHighSchool students' quick details from our DB
 app.get("/students", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
@@ -281,3 +323,6 @@ const closeServer = () => {
 };
 
 module.exports = { app, closeServer };
+
+// FIXME: Need to check values on post and patch routes
+// FIXME: Need better error handling
