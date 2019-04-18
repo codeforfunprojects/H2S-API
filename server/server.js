@@ -213,16 +213,16 @@ app.post("/evaluations/:login", async (req, res) => {
     return res.status(401).send("Invalid API Key");
   }
   const { login } = req.params;
-  const { evaluation } = req.body;
+  const { progress } = req.body;
   let today = moment().format("MM-DD-YYYY");
 
-  if (typeof evaluation.goal !== "string") {
+  if (typeof progress.goal !== "string") {
     return res.status(400).send("Evaluations must start with goals");
   }
   await studentsRef
     .child(`${login}/evaluations`)
     .child(today)
-    .set(evaluation);
+    .set(progress);
   res.status(200).send("Eval added");
 });
 
@@ -232,15 +232,17 @@ app.patch("/evaluations/:login", async (req, res) => {
     return res.status(401).send("Invalid API Key");
   }
   const { login } = req.params;
-  const { evaluation } = req.body;
+  const { progress } = req.body;
   let today = moment().format("MM-DD-YYYY");
+
+  // TODO: Check for goal before posting new eval
 
   try {
     await studentsRef
       .child(`${login}/evaluations`)
       .child(today)
-      .update(evaluation);
-    res.status(200).send("Evaluation updated");
+      .update(progress);
+    res.status(200).send("Progress updated");
   } catch (err) {
     res.status(400).send(err);
   }
