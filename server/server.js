@@ -39,7 +39,7 @@ const API_KEY =
 /******************************************************************************/
 
 // Set a user role
-app.post("/users", async (req, res) => {
+app.post("/user", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
     return res.status(401).send("Invalid API Key");
   }
