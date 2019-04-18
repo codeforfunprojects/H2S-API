@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server/server.js",
     "start-watch": "nodemon server/server.js",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "test-watch": "nodemon --exec 'npm run test'"
   },
   "repository": {

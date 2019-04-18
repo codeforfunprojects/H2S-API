@@ -46,7 +46,7 @@ app.post("/users", async (req, res) => {
   let { user } = req.body;
   try {
     await usersRef.push(user);
-    res.status(200).send("User role set");
+    res.status(200).send(user);
   } catch (error) {
     res.status(400).send(error);
   }
