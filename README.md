@@ -44,6 +44,7 @@ Our API is deployed using [Heroku](https://heroku.com/). Any changes made on the
 
 ### Development & Testing Tools
 
+> [Postman](https://www.getpostman.com/)  
 > [dotenv](https://github.com/motdotla/dotenv)  
 > [jest](https://github.com/facebook/jest)  
 > [nodemon](https://github.com/remy/nodemon)  

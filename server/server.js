@@ -10,18 +10,19 @@ const intraRequest = require("./utils/Intra");
 const db = require("./firebase");
 const studentsRef = db.ref("students");
 const groupsRef = db.ref("groups");
+const usersRef = db.ref("users");
 
+// Create app, then add CORS & bodyParser middleware
 const app = express();
-// Add CORS & bodyParser middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.unsubscribe(bodyParser.urlencoded({ extended: false }));
 
-/****************/
-/* 				*/
-/* Begin Routes */
-/*				*/
-/****************/
+/******************************************************************************/
+/* 																																						*/
+/* 														Begin API Setup 																*/
+/*																																						*/
+/******************************************************************************/
 
 const port = process.env.PORT || 8080;
 const API_KEY =
@@ -30,9 +31,54 @@ const API_KEY =
   process.env.NODE_ENV === "test"
     ? process.env.API_KEY
     : JSON.parse(process.env.API_KEY);
-/*
- * Student Routes
- */
+
+/******************************************************************************/
+/* 																																						*/
+/* 																User Routes 																*/
+/*																																						*/
+/******************************************************************************/
+
+// Set a user role
+app.post("/user", async (req, res) => {
+  if (req.headers.authorization !== API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
+  let { user } = req.body;
+  try {
+    await usersRef.push(user);
+    res.status(200).send(user);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+// Return user's role
+app.get("/user/:email", async (req, res) => {
+  if (req.headers.authorization !== API_KEY) {
+    return res.status(401).send("Invalid API Key");
+  }
+  const { email } = req.params;
+  let user;
+  try {
+    await usersRef.once("value", studentSnapshot => {
+      let users = Object.values(studentSnapshot.val());
+
+      user = users.find(item => {
+        return item.email === email;
+      });
+    });
+    res.status(200).send(user);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+/******************************************************************************/
+/* 																																						*/
+/* 															Student Routes 																*/
+/*																																						*/
+/******************************************************************************/
+
 // Get all HackHighSchool students' quick details from our DB
 app.get("/students", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
@@ -167,16 +213,16 @@ app.post("/evaluations/:login", async (req, res) => {
     return res.status(401).send("Invalid API Key");
   }
   const { login } = req.params;
-  const { evaluation } = req.body;
+  const { progress } = req.body;
   let today = moment().format("MM-DD-YYYY");
 
-  if (typeof evaluation.goal !== "string") {
+  if (typeof progress.goal !== "string") {
     return res.status(400).send("Evaluations must start with goals");
   }
   await studentsRef
     .child(`${login}/evaluations`)
     .child(today)
-    .set(evaluation);
+    .set(progress);
   res.status(200).send("Eval added");
 });
 
@@ -186,23 +232,27 @@ app.patch("/evaluations/:login", async (req, res) => {
     return res.status(401).send("Invalid API Key");
   }
   const { login } = req.params;
-  const { evaluation } = req.body;
+  const { progress } = req.body;
   let today = moment().format("MM-DD-YYYY");
+
+  // TODO: Check for goal before posting new eval
 
   try {
     await studentsRef
       .child(`${login}/evaluations`)
       .child(today)
-      .update(evaluation);
-    res.status(200).send("Evaluation updated");
+      .update(progress);
+    res.status(200).send("Progress updated");
   } catch (err) {
     res.status(400).send(err);
   }
 });
 
-/*
- * Group/Mentor Routes
- */
+/******************************************************************************/
+/* 																																						*/
+/* 																Group Routes 																*/
+/*																																						*/
+/******************************************************************************/
 
 // Get list of groups w/ mentor
 app.get("/groups", (req, res) => {
@@ -244,6 +294,7 @@ app.get("/groups/:code", async (req, res) => {
   res.status(200).send(group);
 });
 
+// Update group by code
 app.patch("/groups/:code", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
     return res.status(401).send("Invalid API Key");
@@ -281,3 +332,6 @@ const closeServer = () => {
 };
 
 module.exports = { app, closeServer };
+
+// FIXME: Need to check values on post/patch route parameters & body
+// FIXME: Need better error handling
