@@ -63,3 +63,6 @@ typings/
 
 #firebase
 serviceAccountKey.json
+
+._*
+.DS_Store

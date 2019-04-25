@@ -233,8 +233,8 @@ app.patch("/checkin/:login", async (req, res) => {
   res.status(200).send(`Checkin status updated to ${checkin_status}`);
 });
 
-// Post a new evaluation to user by login
-app.post("/evaluations/:login", async (req, res) => {
+// Post new progress report to user by login
+app.post("/progress/:login", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
     return res.status(401).send("Invalid API Key");
   }
@@ -243,17 +243,17 @@ app.post("/evaluations/:login", async (req, res) => {
   let today = moment().format("MM-DD-YYYY");
 
   if (typeof progress.goal !== "string") {
-    return res.status(400).send("Evaluations must start with goals");
+    return res.status(400).send("Progress updates must start with goals");
   }
   await studentsRef
-    .child(`${login}/evaluations`)
+    .child(`${login}/progress`)
     .child(today)
     .set(progress);
-  res.status(200).send("Eval added");
+  res.status(200).send("Progress report added");
 });
 
-// Update evaluation
-app.patch("/evaluations/:login", async (req, res) => {
+// Update progress
+app.patch("/progress/:login", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
     return res.status(401).send("Invalid API Key");
   }
@@ -265,7 +265,7 @@ app.patch("/evaluations/:login", async (req, res) => {
 
   try {
     await studentsRef
-      .child(`${login}/evaluations`)
+      .child(`${login}/progress`)
       .child(today)
       .update(progress);
     res.status(200).send("Progress updated");
