@@ -177,6 +177,9 @@ app.patch("/checkin/:login", async (req, res) => {
   if (req.headers.authorization !== API_KEY) {
     return res.status(401).send("Invalid API Key");
   }
+  if (typeof req.body.checkin_status !== "boolean") {
+    return res.status(401).send("Invalid parameters");
+  }
   const { login } = req.params;
   const { checkin_status } = req.body;
   let student = {};
@@ -187,24 +190,47 @@ app.patch("/checkin/:login", async (req, res) => {
   let attendance_history = student.attendance_history
     ? student.attendance_history
     : [];
+  let today = moment().format("MM-DD-YYYY");
+
   try {
     if (
       (typeof student.checkin_status === "undefined" ||
         student.checkin_status === false) &&
       checkin_status === true
     ) {
-      let today = moment().format("MM-DD-YYYY");
-      if (!attendance_history.includes(today)) {
-        attendance_history.push(today);
+      let time_in = moment().format("H:m");
+      let has_checked_in =
+        attendance_history.findIndex(item => item.date === today) >= 0;
+      if (!has_checked_in) {
+        let attendance = { date: today, time_in };
+        attendance_history.push(attendance);
+      } else {
+        throw new Error("Attempting to check student in for 2nd time today.");
       }
+    } else if (student.checkin_status === true && checkin_status === false) {
+      let time_out = moment().format("H:m");
+      let i = attendance_history.findIndex(item => {
+        return item.date === today;
+      });
+      if (i != -1) {
+        attendance_history[i] = { ...attendance_history[i], time_out };
+      }
+    } else if (student.checkin_status === true && checkin_status === true) {
+      throw new Error(
+        "Attempted to check in student that is already checked in"
+      );
+    } else if (student.checkin_status === false && checkin_status === false) {
+      throw new Error(
+        "Attempted to check out student that is already checked out"
+      );
     }
   } catch (error) {
-    console.error(error);
+    return res.status(401).send(error.message);
   }
   await studentsRef
     .child(login)
     .update({ checkin_status, attendance_history: attendance_history });
-  res.status(200).send(`Checkin status update to ${checkin_status}`);
+  res.status(200).send(`Checkin status updated to ${checkin_status}`);
 });
 
 // Post a new evaluation to user by login
