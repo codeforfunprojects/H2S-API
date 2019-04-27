@@ -4,8 +4,9 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const moment = require("moment");
 const intraRequest = require("./utils/Intra");
+const moment = require("moment-timezone");
+moment.tz.setDefault("America/Los_Angeles");
 
 const db = require("./firebase");
 const studentsRef = db.ref("students");
@@ -146,8 +147,6 @@ app.patch("/groups/students/:login", async (req, res) => {
       student = studentSnapshot.val();
     });
     if (typeof student.group !== "undefined") {
-      console.log(student.group.code);
-
       await groupsRef
         .child(`${student.group.code}/students`)
         .once("value", loginSnapshot => {
