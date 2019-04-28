@@ -27,8 +27,7 @@ Please read [CONTRIBUTING.md](https://github.com/donald-stolz/H2S-frontend/blob/
 
 ## Deployment
 
-Our API is deployed using [Heroku](https://heroku.com/). Any changes made on the `master` branch are tested through [Travis CI](https://travis-ci.org/), passing builds are manually deployed.
-
+Our API is deployed using [Heroku](https://heroku.com/). ~~Any changes made on the `master` branch are tested through [Travis CI](https://travis-ci.org/), passing builds are automatically deployed.~~ Once a branch is merged with `master` it must be manually tested & deployed.
 ## Built With
 
 > [Express](https://expressjs.com/) Server Framework  
