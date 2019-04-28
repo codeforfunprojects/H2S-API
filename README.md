@@ -39,7 +39,7 @@ Our API is deployed using [Heroku](https://heroku.com/). Any changes made on the
 > [body-parser](https://github.com/expressjs/body-parser)  
 > [bottleneck](https://github.com/SGrondin/bottleneck)  
 > [cors](https://github.com/expressjs/cors)  
-> [moment](http://momentjs.com/) c
+> [Moment Timezone](http://momentjs.com/timezone/)  
 > [request-promise](https://github.com/request/request-promise)
 
 ### Development & Testing Tools
