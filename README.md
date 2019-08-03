@@ -9,12 +9,14 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 - [Node](https://nodejs.org/en/)
+  - version 12.7
 
 _If you need to upgrade / downgrade your Node Js version, you can use [nvm](https://github.com/creationix/nvm)_
-
+  - `nvm install 12.7`
 ### Installing & Starting
 
 ```
+nvm use 12.7
 npm install
 npm start
 ```
@@ -52,3 +54,6 @@ Our API is deployed using [Heroku](https://heroku.com/). ~~Any changes made on t
 ## Authors
 
 - **[Donald Stolz](https://donstolz.tech/)** - Intial work & design
+
+# TODO
+ - env file placement & node/npm trouble shooting
