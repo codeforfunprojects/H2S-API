@@ -13,6 +13,9 @@ These instructions will get you a copy of the project up and running on your loc
 
 _If you need to upgrade / downgrade your Node Js version, you can use [nvm](https://github.com/creationix/nvm)_
   - `nvm install 12.7`
+  
+- You must get the `.env` file from Kai and place it in the root of this repository folder
+
 ### Installing & Starting
 
 ```
