@@ -58,5 +58,3 @@ Our API is deployed using [Heroku](https://heroku.com/). ~~Any changes made on t
 
 - **[Donald Stolz](https://donstolz.tech/)** - Intial work & design
 
-# TODO
- - env file placement & node/npm trouble shooting
