@@ -31,7 +31,7 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "firebase-admin": "^7.2.0",
-    "moment-timezone": "^0.5.25",
+    "moment-timezone": "^0.5.35",
     "request-promise": "^4.2.4"
   }
 }
